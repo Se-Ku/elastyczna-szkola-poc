@@ -79,6 +79,8 @@ readonly class ElasticsearchManager
                                     'gastronomik => gastronomicznych',
                                     'mechanik => mechanicznych',
                                     'rolnik => rolniczych',
+                                    'it => informatyczne',
+                                    'mechatronika => mechatroniczne',
                                 ]
                             ],
                             // Filtr tnący słowa od początku bez analizy językowej.
