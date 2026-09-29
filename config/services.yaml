@@ -16,6 +16,7 @@ services:
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
         bind:
             $elasticsearchUrl: '%env(ELASTICSEARCH_URL)%'
+            $projectDir: '%kernel.project_dir%'
 
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
@@ -25,6 +26,8 @@ services:
     Elastic\Elasticsearch\Client:
         factory: [ '@App\Factory\ElasticsearchClientFactory', 'createClient' ]
 
+    # Ustalamy domyślną implementację wyszukiwarki
+    App\Search\SearchInterface: '@App\Search\ElasticsearchProvider'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

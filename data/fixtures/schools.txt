@@ -1,0 +1,14 @@
+# Lista szkół - format: Oficjalna nazwa | Alternatywne nazwy | Miasto | Typ
+
+I Liceum Ogólnokształcące im. Adama Mickiewicza | LO Mickiewicza, Mickiewicz, I LO, Pierwsze LO | Warszawa | liceum
+XIV Liceum Ogólnokształcące im. Stanisława Staszica | Staszic, XIV LO, 14 LO, Staszica | Warszawa | liceum
+Zespół Szkół Elektronicznych i Informatycznych | ZSEI, Elektronik, ZSEiI | Warszawa | technikum
+Liceum Ogólnokształcące nr 5 im. Józefa Wybickiego | V LO, Piąte LO, Wybicki, LO 5 | Kraków | liceum
+II Liceum Ogólnokształcące im. Marii Konopnickiej | Konopnicka, Drugie LO, II LO, LO Konopnickiej | Gdańsk | liceum
+Technikum Informatyczne nr 1 | TI 1, Pierwsze Informatyczne, Technikum IT | Wrocław | technikum
+Liceum Ogólnokształcące im. Mikołaja Kopernika | Kopernik, LO Kopernika | Poznań | liceum
+Zespół Szkół Technicznych i Ogólnokształcących | ZSTiO, Techniczne i Ogólnokształcące, ZSTO | Łódź | technikum
+III Liceum Ogólnokształcące im. Juliusza Słowackiego | Słowacki, Trzecie LO, III LO, LO Słowackiego | Kraków | liceum
+Liceum Ogólnokształcące im. Henryka Sienkiewicza | Sienkiewicz, LO Sienkiewicza, Sienkiewicz LO | Katowice | liceum
+Technikum Mechatroniczne | Mechatronika, TM, Tech Mechatroniczne | Gdynia | technikum
+Liceum Ogólnokształcące im. Stefana Żeromskiego | Żeromski, LO Żeromskiego, Zeromski | Szczecin | liceum
