@@ -1,0 +1,4 @@
+FROM docker.elastic.co/elasticsearch/elasticsearch:9.5.0
+
+# Instalujemy wtyczkę analysis-stempel
+RUN bin/elasticsearch-plugin install analysis-stempel --batch

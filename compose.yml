@@ -1,0 +1,20 @@
+services:
+    elasticsearch:
+        build:
+            context: .
+            dockerfile: Dockerfile-es-stempel
+            # Nadajemy nazwę zbudowanemu obrazowi, aby łatwiej go rozpoznać
+        image: sk-custom-elasticsearch-stempel:9.5.0
+        container_name: sk-custom-elasticsearch-stempel
+        environment:
+            - discovery.type=single-node
+            - xpack.security.enabled=false
+            - xpack.security.http.ssl.enabled=false
+            - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+            # --- DEV: WYŁĄCZENIE KONTROLI MIEJSCA NA DYSKU (przeszkadza w testach) ---
+            - cluster.routing.allocation.disk.threshold_enabled=false
+        ports:
+            - "9200:9200"
+        volumes:
+            - ./data/es_data:/usr/share/elasticsearch/data
+
