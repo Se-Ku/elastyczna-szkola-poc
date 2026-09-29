@@ -113,6 +113,10 @@ readonly class ElasticsearchManager
                                 ],
                             ],
                         ],
+                        'acronym' => [
+                            'type' => 'text',
+                            'analyzer' => 'school_search_analyzer',
+                        ],
                     ],
                 ],
             ],
@@ -164,10 +168,18 @@ readonly class ElasticsearchManager
                     '_id' => (string)$id++,
                 ],
             ];
+
+            /*
+             * Realnym przypadkiem jest podanie akronimu, np. "ZSEI" dla "Zespół Szkół Elektronicznych i Informatycznych".
+             * W ER trudno wygenerować w locie akronim i po nich indeksować, dlatego robimy to na etapie uzupełniania danych.
+             * Nie dla każdej szkoły ma to sens, ale niczemu nie szkodzi.
+             * Np. użytkownicy pewnie nie wpiszą "LO5JW" dla "Liceum Ogólnokształcące nr 5 im. Józefa Wybickiego".
+             */
             $params['body'][] = [
                 'official_name' => $name,
                 'city' => $city,
                 'type' => $type,
+                'acronym' => $this->generateAcronym($name),
             ];
         }
 
@@ -175,5 +187,57 @@ readonly class ElasticsearchManager
 
         // Odświeżenie indeksu, aby dane były natychmiast widoczne
         $this->client->indices()->refresh(['index' => $indexName]);
+    }
+
+    /**
+     * Tworzy akronimy nazwy szkoły na potrzeby wyszukiwania.
+     * Nie ma sztywnych zasad jak tworzyć akronimy. Użytkownicy mogą być bardzo kreatywni.
+     * Obsłużymy dwa warianty:
+     * - akronim bez "łączników" w nazwie (im, nr, etc.)
+     * - jak wyżej, ale dopuszczamy łącznik "i" (np. ZSEI, ZSEiI) ze względu na popularność tego wariantu
+     * @param string $name
+     * @return array
+     */
+    private function generateAcronym(string $name): array
+    {
+        // Zostawiamy litery, cyfry i spacje
+        $cleanName = preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $name);
+        $words = explode(' ', mb_strtolower($cleanName));
+
+        // Wariant1: słowa nietrafiające do akronimu
+        $hardStopWords = ['im', 'imienia', 'nr', 'numer'];
+
+        // Wariant 2: słowa dopuszczalne w alternatywnym akronimie
+        // Aktualnie dopuszczamy tylko "i"
+        $softStopWords = ['i'];
+
+        $acronymWithConjunctions = '';
+        $acronymWithoutConjunctions = '';
+
+        foreach ($words as $word) {
+            $word = trim($word);
+
+            // Całkowicie pomijamy puste ciągi i ignorowane słowa
+            if ($word === '' || in_array($word, $hardStopWords, true)) {
+                continue;
+            }
+
+            $firstLetter = mb_substr($word, 0, 1);
+
+            // Wariant 1: wersja podstawowa akronimu (bez dodatkowych słów)
+            if (!in_array($word, $softStopWords, true)) {
+                $acronymWithoutConjunctions .= $firstLetter;
+            }
+
+            // Wariant 2: Wersja alternatywna (więcej dopuszczalnych słów)
+            $acronymWithConjunctions .= $firstLetter;
+        }
+
+        // array_unique odrzuci duplikaty (jeśli w nazwie nie było "i", oba warianty będą identyczne)
+        // array_values zapewnia poprawną strukturę JSON dla Elasticsearch (indeksy numeryczne 0, 1)
+        return array_values(array_unique([
+            $acronymWithConjunctions,
+            $acronymWithoutConjunctions
+        ]));
     }
 }

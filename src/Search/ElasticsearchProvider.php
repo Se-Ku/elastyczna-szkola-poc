@@ -23,6 +23,10 @@ readonly class ElasticsearchProvider implements SearchInterface
 
     public function search(SearchQuery $query): SearchResult
     {
+        // Opcjonalne: jeśli użytkownik wpisze akronim z kropkami (np. Z.S.E.I.),
+        // usuwamy kropki, aby Elasticsearch łatwiej go dopasował.
+        $cleanedInput = str_replace('.', '', $query->phrase);
+
         $params = [
             'index' => $this->indexName,
             'body'  => [
@@ -34,7 +38,7 @@ readonly class ElasticsearchProvider implements SearchInterface
                             [
                                 'match' => [
                                     'official_name' => [
-                                        'query' => $query->phrase,
+                                        'query' => $cleanedInput,
                                         'fuzziness' => 'AUTO',
                                         'boost' => 1.0,
                                     ],
@@ -44,8 +48,17 @@ readonly class ElasticsearchProvider implements SearchInterface
                             [
                                 'match' => [
                                     'official_name.keyword_match' => [
-                                        'query' => $query->phrase,
+                                        'query' => $cleanedInput,
                                         'boost' => 2.0,
+                                    ],
+                                ],
+                            ],
+                            // Wyszukiwanie po akronimie z wysoką wagą
+                            [
+                                'match' => [
+                                    'acronym' => [
+                                        'query' => $cleanedInput,
+                                        'boost' => 5.0,
                                     ],
                                 ],
                             ],
