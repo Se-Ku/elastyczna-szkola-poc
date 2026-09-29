@@ -98,7 +98,13 @@ Przygotowałem konfigurację Dockera, która zbuduje odpowiedni obraz i uruchomi
 **Uwaga!** Obraz ES zajmuje ok. 1 GB.
 
 ```
-# Zbuduje lokalny obraz ES, uruchomi kontener i wystawi port 9200
+# W repo mamy przygotowany lokalny katalog na dane Elasticsearch zamiast wolumenu. 
+# Zamontowany w kontenerze katalog prawdopodobnie będzie inne ID właściciela.
+# Żeby za dużo nie kombinować dajemy dostęp wszystkim
+ 
+chmod 777 ./data/es_data
+
+# Budujemy lokalny obraz ES z pluginem. Uruchomi się kontener i wystawi port 9200.
 docker compose up --build
 ```
 
