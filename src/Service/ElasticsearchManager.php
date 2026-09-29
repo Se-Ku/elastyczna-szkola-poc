@@ -67,34 +67,50 @@ readonly class ElasticsearchManager
                                     '18, xviii, osiemnaste',
                                     '19, xix, dziewietnaste',
                                     '20, xx, dwudzieste',
+
+                                    // --- Żargon szkolny (mapowanie rzecznowników na przymiotniki) ---
+                                    // TODO: Możliwe generyczne rozwiązanie z dodatkowym analizatorem trigramowym,
+                                    //  ale reguły są już dostatecznie skomplikowane jak na PoC
+                                    'elektronik => elektronicznych',
+                                    'elektryk => elektrycznych',
+                                    'ekonomik => ekonomicznych',
+                                    'budowlanka => budowlanych',
+                                    'samochodowka => samochodowych',
+                                    'gastronomik => gastronomicznych',
+                                    'mechanik => mechanicznych',
+                                    'rolnik => rolniczych',
                                 ]
                             ],
-                            // 3. Trigramy (fragmenty 3-znakowe do łapania odmian i literówek)
-                            'trigram_filter' => [
-                                'type' => 'ngram',
-                                'min_gram' => 3,
-                                'max_gram' => 3,
+                            // Filtr tnący słowa od początku bez analizy językowej.
+                            // Np. Polish_stem odrzuci "elektron" -> "Elektronicznych", ponieważ mamy tutaj rzeczownik i przymiotnik.
+                            'edge_ngram_filter' => [
+                                'type' => 'edge_ngram',
+                                'min_gram' => 4,
+                                'max_gram' => 15,
                             ],
                         ],
                         'analyzer' => [
-                            // Analizator indeksujący: zamienia słowa na trigramy z synonimami
-                            'school_index_analyzer' => [
+                            // Analizator indeksujący: z synonimami i ascii, ale całe słowa
+                            'school_standard_analyzer' => [
                                 'tokenizer' => 'standard',
                                 'filter' => [
                                     'lowercase',
                                     'ascii_folding_filter',
                                     'school_synonyms',
-                                    'trigram_filter',
                                 ],
                             ],
-                            // Analizator wyszukujący (bez trigramów, aby zapytanie było dzielone na słowa)
-                            'school_search_analyzer' => [
+                            // Analizator języka polskiego obsługujący odmiany wyrazów
+                            'school_polish_analyzer' => [
                                 'tokenizer' => 'standard',
                                 'filter' => [
                                     'lowercase',
-                                    'ascii_folding_filter',
-                                    'school_synonyms',
+                                    'polish_stem',        // Wymaga znaków diakrytycznych do działania, musi być przed filtrem ascii.
+                                    'ascii_folding_filter',  // Usuwa ogonki z rdzenia na wypadek pomyłek użytkownika
                                 ],
+                            ],
+                            'school_prefix_analyzer' => [
+                                'tokenizer' => 'standard',
+                                'filter' => ['lowercase', 'ascii_folding_filter', 'edge_ngram_filter'],
                             ],
                         ],
                     ],
@@ -103,19 +119,24 @@ readonly class ElasticsearchManager
                     'properties' => [
                         'official_name' => [
                             'type' => 'text',
-                            'analyzer' => 'school_index_analyzer',
-                            'search_analyzer' => 'school_search_analyzer',
+                            'analyzer' => 'school_standard_analyzer',
                             'fields' => [
-                                // Podpole do wyszukiwania precyzyjnego (boost za dokładniejsze trafienie)
-                                'keyword_match' => [
+                                // 1. Podpole dedykowane dla odmian polskich wyrazów
+                                'stemmed' => [
                                     'type' => 'text',
-                                    'analyzer' => 'school_search_analyzer',
+                                    'analyzer' => 'school_polish_analyzer',
                                 ],
+                                // 2. Zapasowe pole dopasowujące początki wyrazów
+                                'prefix' => [
+                                    'type' => 'text',
+                                    'analyzer' => 'school_prefix_analyzer',
+                                    'search_analyzer' => 'school_standard_analyzer',
+                                ]
                             ],
                         ],
                         'acronym' => [
                             'type' => 'text',
-                            'analyzer' => 'school_search_analyzer',
+                            'analyzer' => 'school_standard_analyzer',
                         ],
                     ],
                 ],

@@ -34,26 +34,35 @@ readonly class ElasticsearchProvider implements SearchInterface
                 'query' => [
                     'bool' => [
                         'should' => [
-                            // Zapytanie główne: analiza trigramowa z fuzzymatchingiem
+                            // 1. Precyzyjne (3.0)
                             [
                                 'match' => [
                                     'official_name' => [
                                         'query' => $cleanedInput,
                                         'fuzziness' => 'AUTO',
-                                        'boost' => 1.0,
+                                        'boost' => 3.0,
                                     ],
                                 ],
                             ],
-                            // Dodatkowy "boost" za dopasowanie całych słów kluczowych
+                            // 2. Stempel - Odmiana przez przypadki (2.5)
                             [
                                 'match' => [
-                                    'official_name.keyword_match' => [
+                                    'official_name.stemmed' => [
                                         'query' => $cleanedInput,
-                                        'boost' => 2.0,
+                                        'boost' => 2.5,
                                     ],
                                 ],
                             ],
-                            // Wyszukiwanie po akronimie z wysoką wagą
+                            // 3. Edge N-Gram - Koło ratunkowe dla urwanych słów i innych form (np. elektronik -> elektronicznych) (1.5)
+                            [
+                                'match' => [
+                                    'official_name.prefix' => [
+                                        'query' => $cleanedInput,
+                                        'boost' => 1.5,
+                                    ],
+                                ],
+                            ],
+                            // 4. Akronimy (5.0)
                             [
                                 'match' => [
                                     'acronym' => [
